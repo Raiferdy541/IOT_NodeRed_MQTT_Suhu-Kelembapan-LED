@@ -1,0 +1,73 @@
+#include "ESP8266WiFi.h"
+
+const char server[] = "192.168.98.25"; 
+const char* MY_SSID = "Red";
+const char* MY_PWD =  "00000000";
+WiFiClient client;
+
+
+#define triggerPin  D1
+#define echoPin     D2
+#define LED         D0 
+
+void setup() {
+  pinMode(LED, OUTPUT);
+  Serial.begin(115200);
+  Serial.print("Connecting to "+*MY_SSID);
+  WiFi.begin(MY_SSID, MY_PWD);
+  Serial.println("going into wl connect");
+
+  while (WiFi.status() != WL_CONNECTED) //not connected,  ...waiting to connect
+    {
+      delay(2000);
+      Serial.print(".");
+    }
+  Serial.println("wl connected");
+  Serial.println("");
+  Serial.println("Credentials accepted! Connected to wifi\n ");
+  Serial.println("");
+  
+  pinMode(triggerPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  Serial.begin(115200); 
+}
+
+void loop() {
+
+  long duration, jarak;
+  digitalWrite(triggerPin, LOW);
+  delayMicroseconds(2); 
+  digitalWrite(triggerPin, HIGH);
+  delayMicroseconds(10); 
+  digitalWrite(triggerPin, LOW);
+  duration = pulseIn(echoPin, HIGH);
+  jarak = (duration/2) / 29.1;
+  Serial.print("Jarak Sensor: ");
+  Serial.println(jarak);
+
+
+ if (jarak <= 10 ){
+    digitalWrite(LED, HIGH); 
+    Serial.println("JARAK TERLALU DEKAT, SEGERA MENJAUH");
+      }
+   
+ else {
+  digitalWrite(LED, LOW); 
+  Serial.println("JARAK  AMAN");
+  }
+
+
+  Serial.println("\nStart koneksi ke server..."); 
+  // Apabila terhubung, akan ada laporan via serial:
+  if (client.connect(server, 80)) {
+    Serial.println("connected to server");
+    WiFi.printDiag(Serial);
+
+  client.print("GET /iot/load.php?jarak=");
+  client.print(jarak);
+  client.println(" HTTP/1.1");
+  client.println("Host: 192.168.98.25");
+  client.println();
+  delay(2000);
+}
+}
